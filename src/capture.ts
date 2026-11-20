@@ -1,6 +1,7 @@
 import pg from "pg";
 import { groupTransactions } from "./parse.js";
 import { saveTransaction } from "./save.js";
+import { compactHistory } from "./compact.js";
 
 
 // Load DATABASE_URL from the .env file.
@@ -45,6 +46,9 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 console.log("capturing changes, press Ctrl+C to stop");
 
+const COMPACT_EVERY_MS = 60_000; // run compaction at most once a minute
+let lastCompact = Date.now(); // when compaction last ran (starts now, so the first run is a minute after startup)
+
 while (running) {
   // Ask Postgres for any new changes since the last poll (this also marks them as consumed).
   const result = await client.query<{ lsn: string; xid: string; data: string }>(
@@ -68,6 +72,17 @@ while (running) {
   const lastTxn = txns[txns.length - 1]; // last transaction is the one we need to advance the slot to
   if (txns.length > 0) {
     await client.query("SELECT pg_replication_slot_advance($1, $2)", [SLOT_NAME, lastTxn.commitLsn]); // advance the slot to the next transaction
+  }
+
+  // Once a minute, save a snapshot every 1000 changes. A failure only prints a warning; capture keeps going.
+  if (Date.now() - lastCompact >= COMPACT_EVERY_MS) {
+    try {
+      const created = await compactHistory(historyClient, "orders", 1000);
+      if (created > 0) console.log(`compaction saved ${created} snapshot(s)`);
+    } catch (err) {
+      console.warn("compaction failed:", err instanceof Error ? err.message : err);
+    }
+    lastCompact = Date.now(); // set after the attempt (even a failed one), so a failure retries in a minute, not every second
   }
 
   // Wait 1 second before checking again.

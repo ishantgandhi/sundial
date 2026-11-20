@@ -20,3 +20,8 @@ CREATE TABLE snapshots (
   table_name text NOT NULL,
   rows       jsonb NOT NULL
 );
+
+-- Speed up replay (WHERE table_name AND lsn > ... ORDER BY lsn, id) and "latest snapshot before a time".
+CREATE INDEX IF NOT EXISTS changes_table_lsn_id ON changes (table_name, lsn, id);
+CREATE INDEX IF NOT EXISTS snapshots_table_taken ON snapshots (table_name, taken_at);
+EOF

@@ -12,7 +12,10 @@
     "diff": "tsx src/diff-cli.ts",
     "restore": "tsx src/restore-cli.ts",
     "server": "tsx src/server.ts",
-    "web": "npm --prefix web run dev"
+    "web": "npm --prefix web run dev",
+    "bench:seed": "tsx src/bench-seed.ts",
+    "bench:run": "tsx src/bench-run.ts",
+    "compact": "tsx src/compact-cli.ts"
   },
   "keywords": [],
   "author": "",
