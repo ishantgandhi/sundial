@@ -8,7 +8,8 @@
     "dev": "tsx src/index.ts",
     "capture": "tsx src/capture.ts",
     "snapshot": "tsx src/snapshot.ts",
-    "rebuild": "tsx src/rebuild-cli.ts"
+    "rebuild": "tsx src/rebuild-cli.ts",
+    "diff": "tsx src/diff-cli.ts"
   },
   "keywords": [],
   "author": "",
