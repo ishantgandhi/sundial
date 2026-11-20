@@ -1,4 +1,5 @@
 import pg from "pg";
+import { groupTransactions } from "./parse.js";
 
 // Load DATABASE_URL from the .env file.
 process.loadEnvFile(".env");
@@ -40,12 +41,20 @@ console.log("capturing changes, press Ctrl+C to stop");
 while (running) {
   // Ask Postgres for any new changes since the last poll (this also marks them as consumed).
   const result = await client.query<{ lsn: string; xid: string; data: string }>(
-    "SELECT lsn, xid, data FROM pg_logical_slot_get_changes('sundial_slot', NULL, NULL, 'include-timestamp', '1')",
+    "SELECT lsn, xid, data FROM pg_logical_slot_peek_changes($1, NULL, NULL, 'include-timestamp', '1')", [SLOT_NAME],
   );
+  const txns = groupTransactions(result.rows); // group the transactions into envelopes
 
   // Print each change as "lsn | xid | data".
-  for (const row of result.rows) {
-    console.log(`${row.lsn} | ${row.xid} | ${row.data}`);
+  for (const txn of txns) {
+    console.log(`${txn.xid} | ${txn.commitLsn} | ${txn.committedAt}`);
+    for (const change of txn.changes) {
+      console.log(`${change.tableName} | ${change.action} | ${change.rowKey.id} | ${change.oldRow?.id} | ${change.newRow?.id}`);
+    }
+  }
+  const lastTxn = txns[txns.length - 1]; // last transaction is the one we need to advance the slot to
+  if (txns.length > 0) {
+    await client.query("SELECT pg_replication_slot_advance($1, $2)", [SLOT_NAME, lastTxn.commitLsn]); // advance the slot to the next transaction
   }
 
   // Wait 1 second before checking again.
