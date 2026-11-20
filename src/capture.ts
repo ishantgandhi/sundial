@@ -1,0 +1,56 @@
+import pg from "pg";
+
+// Load DATABASE_URL from the .env file.
+process.loadEnvFile(".env");
+
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is not set. Copy .env.example to .env.");
+}
+
+const SLOT_NAME = "sundial_slot";
+
+// Connect to the orders database.
+const client = new pg.Client({ connectionString: databaseUrl });
+await client.connect();
+
+// Look in pg_replication_slots to see if our slot already exists.
+const existing = await client.query("SELECT 1 FROM pg_replication_slots WHERE slot_name = $1", [SLOT_NAME]);
+
+// Create the slot (using the test_decoding plugin) only if it's missing.
+if (existing.rowCount === 0) {
+  await client.query("SELECT pg_create_logical_replication_slot($1, 'test_decoding')", [SLOT_NAME]);
+  console.log(`created slot ${SLOT_NAME}`);
+} else {
+  console.log(`slot ${SLOT_NAME} already exists`);
+}
+
+// Flag that the loop below checks; Ctrl+C flips it to false.
+let running = true;
+process.on("SIGINT", () => {
+  console.log("\nstopping...");
+  running = false;
+});
+
+// Pause for the given number of milliseconds.
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+console.log("capturing changes, press Ctrl+C to stop");
+
+while (running) {
+  // Ask Postgres for any new changes since the last poll (this also marks them as consumed).
+  const result = await client.query<{ lsn: string; xid: string; data: string }>(
+    "SELECT lsn, xid, data FROM pg_logical_slot_get_changes('sundial_slot', NULL, NULL, 'include-timestamp', '1')",
+  );
+
+  // Print each change as "lsn | xid | data".
+  for (const row of result.rows) {
+    console.log(`${row.lsn} | ${row.xid} | ${row.data}`);
+  }
+
+  // Wait 1 second before checking again.
+  await sleep(1000);
+}
+
+// Close the database connection cleanly now that we've stopped.
+await client.end();
