@@ -9,7 +9,8 @@
     "capture": "tsx src/capture.ts",
     "snapshot": "tsx src/snapshot.ts",
     "rebuild": "tsx src/rebuild-cli.ts",
-    "diff": "tsx src/diff-cli.ts"
+    "diff": "tsx src/diff-cli.ts",
+    "restore": "tsx src/restore-cli.ts"
   },
   "keywords": [],
   "author": "",
