@@ -1,0 +1,10 @@
+services:
+  db:
+    image: postgres:16
+    command: ["postgres", "-c", "wal_level=logical"]
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: sundial
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
