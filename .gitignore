@@ -1,2 +1,11 @@
 node_modules
 .env
+skills-lock.json
+.agents/skills/make-interfaces-feel-better/animations.md
+.agents/skills/make-interfaces-feel-better/performance.md
+.agents/skills/make-interfaces-feel-better/icons.md
+.claude/skills/make-interfaces-feel-better
+.agents/skills/make-interfaces-feel-better/surfaces.md
+.agents/skills/make-interfaces-feel-better/typography.md
+.agents/skills/make-interfaces-feel-better/SKILL.md
+.agents/skills/make-interfaces-feel-better/agents/openai.yaml

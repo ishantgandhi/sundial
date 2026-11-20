@@ -10,7 +10,8 @@
     "snapshot": "tsx src/snapshot.ts",
     "rebuild": "tsx src/rebuild-cli.ts",
     "diff": "tsx src/diff-cli.ts",
-    "restore": "tsx src/restore-cli.ts"
+    "restore": "tsx src/restore-cli.ts",
+    "server": "tsx src/server.ts"
   },
   "keywords": [],
   "author": "",
@@ -18,9 +19,13 @@
   "type": "module",
   "private": "false",
   "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.3.0",
     "pg": "^8.23.1"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
     "tsx": "^4.23.15",
