@@ -57,3 +57,46 @@ export function parseChangeLine(data: string): Change | null {
   const source = next ?? old;
   return { tableName, action, rowKey: { id: source?.id ?? null }, oldRow: old, newRow: next };
 }
+
+export type Transaction = {
+    xid: string;
+    commitLsn: string;
+    committedAt: string;
+    changes: Change[];
+  };
+  
+  type SlotRow = { lsn: string; xid: string; data: string };
+  
+  export function groupTransactions(rows: SlotRow[]): Transaction[] {
+    const done: Transaction[] = [];
+    let current: Transaction | null = null; // the envelope we're filling right now
+  
+    for (const row of rows) {
+      // if the line starts with "BEGIN", open a new envelope
+      //         (xid from the row, empty changes, commitLsn and committedAt blank for now)
+      if (row.data.startsWith("BEGIN")) {
+        current = {
+          xid: row.xid,
+          commitLsn: "",
+          committedAt: "",
+          changes: [],
+        };
+      }
+      //  if the line starts with "COMMIT", fill in commitLsn and committedAt,
+      //         add the envelope to `done`, and set `current` back to null
+      if (row.data.startsWith("COMMIT")) {
+        current!.commitLsn = row.lsn;
+        current!.committedAt = /\(at (.*)\)/.exec(row.data)?.[1] ?? "";
+        done.push(current!);
+        current = null;
+      }
+      // otherwise it's a change line. Run parseChangeLine on it,
+      //         and if you get a result, add it to current.changes
+      const change = parseChangeLine(row.data);
+      if (change) {
+        current!.changes.push(change);
+      }
+    }
+  
+    return done;
+  }
