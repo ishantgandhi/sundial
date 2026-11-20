@@ -11,7 +11,8 @@
     "rebuild": "tsx src/rebuild-cli.ts",
     "diff": "tsx src/diff-cli.ts",
     "restore": "tsx src/restore-cli.ts",
-    "server": "tsx src/server.ts"
+    "server": "tsx src/server.ts",
+    "web": "npm --prefix web run dev"
   },
   "keywords": [],
   "author": "",

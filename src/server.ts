@@ -56,9 +56,11 @@ app.use(cors({ origin: /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/ })); // br
 app.use(express.json());
 
 // Every commit after the first snapshot: its position, its time, and how many row changes it had.
+// The time is sent as Postgres's own text (::text), not a JS Date, because a Date drops the microseconds
+// and rebuilding at a cut-short time would miss that commit's own change.
 app.get("/api/ticks", route(async () => {
   const result = await history.query(
-    `SELECT lsn, min(committed_at) AS "committedAt", count(*)::int AS "changeCount"
+    `SELECT lsn, min(committed_at)::text AS "committedAt", count(*)::int AS "changeCount"
      FROM changes
      WHERE table_name = $1
        AND lsn > (SELECT lsn FROM snapshots WHERE table_name = $1 ORDER BY taken_at, id LIMIT 1)
@@ -68,6 +70,9 @@ app.get("/api/ticks", route(async () => {
   );
   return result.rows;
 }));
+
+// The live table, right now.
+app.get("/api/live", route(async () => liveRows()));
 
 // The table as it was at the given time.
 app.get("/api/table", route(async (req) => rebuildAt(history, TABLE, need(req, "at"))));

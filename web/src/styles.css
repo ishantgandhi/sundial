@@ -1,0 +1,361 @@
+/* Black and white. The only colors are the three diff highlights. */
+:root {
+  --line: #e5e5e5;
+  --dim: #8a8a8a;
+  --add: #e6f4ea;
+  --rem: #fce8e6;
+  --chg: #fff8c5;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #fff;
+  color: #000;
+  font: 13px/1.5 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+main {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 48px 32px 96px;
+}
+header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+h2 {
+  display: flex;
+  align-items: center;
+  min-height: 32px; /* same height as a heading with a button, so side-by-side columns line up */
+  gap: 8px;
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+section {
+  margin-bottom: 40px;
+  min-width: 0;
+}
+p {
+  margin: 8px 0;
+}
+.mono {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.dim {
+  color: var(--dim);
+}
+.row-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.row-between h2 {
+  margin: 0;
+}
+.cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+@media (max-width: 800px) {
+  .cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* buttons */
+button {
+  font: inherit;
+  border-radius: 2px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+button.primary {
+  background: #000;
+  color: #fff;
+  border: 1px solid #000;
+}
+button.secondary {
+  background: #fff;
+  color: #000;
+  border: 1px solid #000;
+}
+button:disabled {
+  background: #f2f2f2;
+  color: #b5b5b5;
+  border-color: var(--line);
+  cursor: default;
+}
+button {
+  transition: scale 120ms ease-out, background-color 120ms ease-out, color 120ms ease-out;
+}
+button:active:not(:disabled) {
+  scale: 0.96; /* small press feedback */
+}
+button.link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--dim);
+}
+button.link:hover {
+  color: #000;
+}
+button:focus-visible,
+.handle:focus-visible,
+input:focus-visible {
+  outline: 1px solid #000;
+  outline-offset: 2px;
+}
+
+/* slider: a thin black line, small tick marks, a solid black handle */
+.slider {
+  height: 80px;
+  padding: 0 6px; /* half the handle's width, so the handle never sticks out past the edges */
+  cursor: pointer;
+  touch-action: none; /* dragging should move the handle, not scroll the page */
+  user-select: none;
+}
+.track {
+  position: relative;
+  top: 20px;
+  height: 1px;
+  background: #000;
+}
+.mark {
+  position: absolute;
+  top: 6px;
+  width: 1px;
+  height: 6px;
+  background: #000;
+}
+.mark.now {
+  height: 10px;
+}
+.handle {
+  position: absolute;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border-radius: 2px;
+  background: #000;
+  transition: left 180ms cubic-bezier(0.2, 0, 0, 1); /* glides to the nearest stop on release */
+}
+.handle.dragging,
+.handle-label.dragging {
+  transition: none; /* while dragging, follow the pointer with no lag */
+}
+.handle-label {
+  position: absolute;
+  top: 22px;
+  white-space: nowrap;
+  line-height: 1.4;
+  transition: left 180ms cubic-bezier(0.2, 0, 0, 1), transform 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* the list of changes inside one transaction */
+.changes ul,
+.plan {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.changes li {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+}
+.verb {
+  font-weight: 500;
+  text-transform: uppercase;
+  margin-right: 6px;
+}
+
+/* tables */
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+}
+table.data th {
+  text-align: left;
+  font-weight: 400;
+  color: var(--dim);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+}
+table.data td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+}
+td.gutter,
+th.gutter {
+  width: 20px;
+  padding-right: 0;
+  color: #000;
+}
+td.check,
+th.check {
+  width: 24px;
+  padding-right: 0;
+}
+input[type="checkbox"] {
+  accent-color: #000;
+  margin: 0;
+  vertical-align: middle;
+}
+
+/* the three diff highlights: added, removed, changed */
+tr.add,
+.plan li.add {
+  background: var(--add);
+  font-weight: 700;
+}
+tr.rem,
+.plan li.rem {
+  background: var(--rem);
+}
+tr.rem td:not(.gutter) {
+  text-decoration: line-through;
+}
+.plan li.rem {
+  text-decoration: none;
+}
+td.cell-chg,
+.plan li.chg {
+  background: var(--chg);
+}
+
+/* while new data loads, the old data dims a little, but only if it takes more than a moment */
+.fade {
+  transition: opacity 120ms ease-out;
+}
+.fade.stale {
+  opacity: 0.5;
+  transition-delay: 200ms;
+}
+.changes {
+  min-height: 112px;
+}
+
+/* messages */
+.error {
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 8px 12px;
+}
+.notice {
+  color: var(--dim);
+}
+
+/* confirm dialog */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+.backdrop,
+.dialog {
+  animation: fade-in 120ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.dialog {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 80vh;
+  overflow: auto;
+  padding: 24px;
+}
+.dialog h2 {
+  color: #000;
+  text-transform: none;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+.plan li {
+  padding: 4px 8px;
+  margin-bottom: 2px;
+  border-radius: 2px;
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+/* the time slider stays pinned to the bottom of the window */
+.time {
+  position: sticky;
+  bottom: 0;
+  margin: auto -32px -96px; /* auto on top pushes it to the bottom of a short page */
+  padding: 16px 32px 24px;
+  background: #fff;
+  border-top: 1px solid var(--line);
+}
+
+/* main content on the left, the live table on the right */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 48px;
+  align-items: start;
+}
+.live {
+  position: sticky;
+  top: 24px;
+  padding-left: 24px;
+  border-left: 1px solid var(--line);
+}
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .live {
+    position: static;
+    padding-left: 0;
+    border-left: 0;
+  }
+}
