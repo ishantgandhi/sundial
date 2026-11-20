@@ -1,11 +1,25 @@
+# dependencies (root and web/)
 node_modules
+
+# secrets and local config (a future .env.example is fine to commit)
 .env
+.env.*
+!.env.example
+
+# build output and caches
+dist
+*.tsbuildinfo
+
+# logs (including debug logs written to .cursor/)
+*.log
+
+# OS files
+.DS_Store
+
+# throwaway test scripts (src/try-apply.ts, src/try-group.ts and similar)
+src/try-*.ts
+
+# AI tool folders and lock file
+.agents/
+.claude/
 skills-lock.json
-.agents/skills/make-interfaces-feel-better/animations.md
-.agents/skills/make-interfaces-feel-better/performance.md
-.agents/skills/make-interfaces-feel-better/icons.md
-.claude/skills/make-interfaces-feel-better
-.agents/skills/make-interfaces-feel-better/surfaces.md
-.agents/skills/make-interfaces-feel-better/typography.md
-.agents/skills/make-interfaces-feel-better/SKILL.md
-.agents/skills/make-interfaces-feel-better/agents/openai.yaml
