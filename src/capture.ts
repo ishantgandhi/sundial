@@ -1,11 +1,14 @@
 import pg from "pg";
 import { groupTransactions } from "./parse.js";
+import { saveTransaction } from "./save.js";
+
 
 // Load DATABASE_URL from the .env file.
 process.loadEnvFile(".env");
 
 const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
+const historyDatabaseUrl = process.env.HISTORY_DATABASE_URL;
+if (!databaseUrl || !historyDatabaseUrl) {
   throw new Error("DATABASE_URL is not set. Copy .env.example to .env.");
 }
 
@@ -14,6 +17,10 @@ const SLOT_NAME = "sundial_slot";
 // Connect to the orders database.
 const client = new pg.Client({ connectionString: databaseUrl });
 await client.connect();
+
+// Connect to the history database.
+const historyClient = new pg.Client({ connectionString: historyDatabaseUrl });
+await historyClient.connect();
 
 // Look in pg_replication_slots to see if our slot already exists.
 const existing = await client.query("SELECT 1 FROM pg_replication_slots WHERE slot_name = $1", [SLOT_NAME]);
@@ -50,6 +57,12 @@ while (running) {
     console.log(`${txn.xid} | ${txn.commitLsn} | ${txn.committedAt}`);
     for (const change of txn.changes) {
       console.log(`${change.tableName} | ${change.action} | ${change.rowKey.id} | ${change.oldRow?.id} | ${change.newRow?.id}`);
+    }
+    const saved = await saveTransaction(historyClient, txn); // save the transaction to the history database
+    if (saved) {
+      console.log(`saved transaction ${txn.xid}`);
+    } else {
+      console.log(`transaction ${txn.xid} already saved`);
     }
   }
   const lastTxn = txns[txns.length - 1]; // last transaction is the one we need to advance the slot to
