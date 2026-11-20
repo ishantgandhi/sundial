@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx src/index.ts",
-    "capture": "tsx src/capture.ts"
+    "capture": "tsx src/capture.ts",
+    "snapshot": "tsx src/snapshot.ts"
   },
   "keywords": [],
   "author": "",

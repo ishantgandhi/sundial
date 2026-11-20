@@ -11,3 +11,12 @@ CREATE TABLE changes (
 );
 
 CREATE INDEX ON changes (committed_at);
+
+-- One row per snapshot: every row of a table, frozen at one log position (lsn).
+CREATE TABLE snapshots (
+  id         bigserial PRIMARY KEY,
+  lsn        pg_lsn NOT NULL,
+  taken_at   timestamptz NOT NULL DEFAULT now(),
+  table_name text NOT NULL,
+  rows       jsonb NOT NULL
+);
